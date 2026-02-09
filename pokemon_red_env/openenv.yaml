@@ -1,0 +1,6 @@
+name: pokemon_red_env
+version: 0.1.0
+description: Pokemon Red reinforcement learning environment powered by PyBoy and OpenEnv.
+entrypoints:
+  server: pokemon_red_env.server.app:app
+  client: pokemon_red_env.client:PokemonRedEnv
