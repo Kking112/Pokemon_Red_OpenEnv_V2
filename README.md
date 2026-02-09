@@ -20,9 +20,9 @@ uv sync
 
 This repository does not ship the Pokemon Red ROM.
 
-You must provide your own legally obtained `.gb` file and place it at:
+You must provide your own legally obtained `.gb` file and place it in the root directory of the repository.
 
-`/Users/neo/Desktop/My_Projects/Open_Source/OpenEnv/OpenEnv_Challenege/Pokemon_Red_OpenEnv/PokemonRed.gb`
+
 
 or set:
 
@@ -120,7 +120,7 @@ With `include_select=true`:
 
 These resolve against:
 
-`/Users/neo/Desktop/My_Projects/Open_Source/OpenEnv/OpenEnv_Challenege/Pokemon_Red_OpenEnv/pokemonred_puffer/pyboy_states`
+`/Users/neo/Desktop/My_Projects/Open_Source/OpenEnv/OpenEnv_Challenege/Pokemon_Red_OpenEnv_V2/pokemonred_puffer/pyboy_states`
 
 ## Notes
 
