@@ -2,3 +2,4 @@ pokemonred_puffer/*
 .venv/
 __pycache__/
 *.pyc
+PokemonRed.gb

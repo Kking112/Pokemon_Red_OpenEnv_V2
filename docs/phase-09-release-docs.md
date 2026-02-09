@@ -4,7 +4,8 @@
 
 - Updated root `README.md` with setup/run/test/usage instructions.
 - Added root `AGENTS.md` with architecture and extension guidance.
-- Added OpenEnv manifest (`pokemon_red_env/openenv.yaml`).
+- Added OpenEnv manifest (`pokemon_red_env/openenv.yaml`) for package-local reference.
+- Added repository-root OpenEnv manifest (`openenv.yaml`) for CLI validation compatibility.
 
 ## Current status
 

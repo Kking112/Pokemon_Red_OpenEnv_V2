@@ -1,0 +1,13 @@
+.git
+.venv
+.pytest_cache
+.ruff_cache
+.codex
+__pycache__
+*.pyc
+PokemonRed.gb
+
+# Keep only runtime state artifacts from the reference repo.
+pokemonred_puffer/*
+!pokemonred_puffer/pyboy_states/
+!pokemonred_puffer/pyboy_states/*.state

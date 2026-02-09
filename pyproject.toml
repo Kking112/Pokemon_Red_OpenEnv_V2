@@ -11,7 +11,11 @@ dependencies = [
     "pyboy>=2.7.0",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.12.0",
+    "uvicorn>=0.40.0",
 ]
+
+[project.scripts]
+server = "server.app:main"
 
 [dependency-groups]
 dev = [

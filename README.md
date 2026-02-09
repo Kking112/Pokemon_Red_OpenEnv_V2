@@ -16,6 +16,24 @@ A production-oriented OpenEnv environment for Pokemon Red using PyBoy.
 uv sync
 ```
 
+## ROM requirement (legal)
+
+This repository does not ship the Pokemon Red ROM.
+
+You must provide your own legally obtained `.gb` file and place it at:
+
+`/Users/neo/Desktop/My_Projects/Open_Source/OpenEnv/OpenEnv_Challenege/Pokemon_Red_OpenEnv/PokemonRed.gb`
+
+or set:
+
+`POKEMON_RED_GB_PATH=/absolute/path/to/your/PokemonRed.gb`
+
+Search the web for legal guidance on dumping your own cartridge in your region.
+
+For Docker usage, mount your ROM file into the container and set:
+
+`POKEMON_RED_GB_PATH=/app/roms/PokemonRed.gb`
+
 ## Run tests
 
 ```bash
@@ -23,10 +41,33 @@ uv run pytest -q
 uv run pytest --cov=pokemon_red_env --cov-report=term-missing
 ```
 
+## Validate OpenEnv manifest
+
+```bash
+uv run openenv validate --verbose .
+```
+
 ## Run server
 
 ```bash
 uv run uvicorn pokemon_red_env.server.app:app --host 0.0.0.0 --port 8000
+```
+
+## Docker usage
+
+Build image:
+
+```bash
+uv run openenv build -t pokemon-red-openenv:latest
+```
+
+Run image with your legally obtained ROM mounted:
+
+```bash
+docker run --rm -p 8000:8000 \
+  -v /absolute/path/to/your/PokemonRed.gb:/app/roms/PokemonRed.gb:ro \
+  -e POKEMON_RED_GB_PATH=/app/roms/PokemonRed.gb \
+  pokemon-red-openenv:latest
 ```
 
 ## Client example
