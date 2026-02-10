@@ -87,6 +87,23 @@ async def main():
 asyncio.run(main())
 ```
 
+## Random action demos
+
+Run local client/server demo (spawns uvicorn automatically):
+
+```bash
+uv run demo.py
+```
+
+Run Docker demo (builds image on first run, then starts a container):
+
+```bash
+uv run demo_docker.py
+```
+
+Both demos run a dummy random-action agent for 100 steps by default and render
+the game frames in your terminal.
+
 ## Action mapping
 
 Default (`include_select=false`, `include_noop=true`):
