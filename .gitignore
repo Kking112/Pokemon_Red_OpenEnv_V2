@@ -3,3 +3,4 @@ pokemonred_puffer/*
 __pycache__/
 *.pyc
 PokemonRed.gb
+.codex/*
