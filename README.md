@@ -95,14 +95,14 @@ Run local client/server demo (spawns uvicorn automatically):
 uv run demo.py
 ```
 
-Run Docker demo (builds image on first run, then starts a container):
+Run with standard PyBoy window rendering (default; use `--headless` to keep it off-screen):
 
 ```bash
 uv run demo_docker.py
 ```
 
-Both demos run a dummy random-action agent for 100 steps by default and render
-the game frames in your terminal.
+Both demos run a dummy random-action agent for 100 steps by default and use the
+standard PyBoy window (`window="SDL2"`) unless `--headless` is passed.
 
 ## Action mapping
 

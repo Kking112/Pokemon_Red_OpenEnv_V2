@@ -45,10 +45,9 @@ def parse_args() -> argparse.Namespace:
         help="Render speed. Set 0 to render as fast as possible.",
     )
     parser.add_argument(
-        "--render-width",
-        type=int,
-        default=64,
-        help="Target render width in terminal character cells.",
+        "--headless",
+        action="store_true",
+        help="Run with PyBoy in headless mode (no game window). Omit for normal PyBoy rendering.",
     )
     parser.add_argument(
         "--rom-path",
@@ -124,7 +123,13 @@ def _build_image(image: str) -> None:
         raise RuntimeError(f"Failed to build Docker image {image}")
 
 
-def _start_container(image: str, container_name: str, host_port: int, rom_path: Path) -> str:
+def _start_container(
+    image: str,
+    container_name: str,
+    host_port: int,
+    rom_path: Path,
+    headless: bool,
+) -> str:
     run_result = _docker_cmd(
         "run",
         "--rm",
@@ -138,7 +143,7 @@ def _start_container(image: str, container_name: str, host_port: int, rom_path: 
         "-e",
         "POKEMON_RED_GB_PATH=/app/roms/PokemonRed.gb",
         "-e",
-        "POKEMON_RED_HEADLESS=true",
+        f"POKEMON_RED_HEADLESS={'true' if headless else 'false'}",
         image,
         capture_output=True,
     )
@@ -183,7 +188,13 @@ def main() -> None:
 
     host_port = args.port if args.port > 0 else find_free_port()
     container_name = f"pokemon-red-demo-{uuid.uuid4().hex[:8]}"
-    _start_container(args.image, container_name, host_port, rom_path)
+    _start_container(
+        args.image,
+        container_name,
+        host_port,
+        rom_path,
+        headless=args.headless,
+    )
 
     base_url = f"http://127.0.0.1:{host_port}"
     keep_container = bool(args.keep_container)
@@ -196,7 +207,6 @@ def main() -> None:
                 init_state=args.init_state,
                 seed=args.seed,
                 fps=args.fps,
-                render_width=args.render_width,
                 label="pokemon_red (docker server)",
             )
         )

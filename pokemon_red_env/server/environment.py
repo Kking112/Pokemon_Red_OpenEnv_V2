@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import base64
 import io
+import threading
+import asyncio
 import traceback
 import uuid
 from typing import Any
@@ -29,6 +31,11 @@ class PokemonRedEnvironment(
     def __init__(self, config: PokemonRedConfig):
         super().__init__()
         self.config = config
+        self._main_thread_id = threading.get_ident()
+        try:
+            self._main_loop = asyncio.get_running_loop()
+        except RuntimeError:
+            self._main_loop = None
 
         if self.config.fail_fast_on_missing_rom and not self.config.gb_path_obj.exists():
             raise FileNotFoundError(
@@ -69,6 +76,24 @@ class PokemonRedEnvironment(
         self._seen_coords: set[tuple[int, int, int]] = set()
         self._prev_state_dict: dict[str, Any] = {}
         self._blank_screen = self._encode_png_b64(np.zeros((144, 160, 3), dtype=np.uint8))
+
+    async def _run_on_main_loop(self, func, *args: Any, **kwargs: Any) -> Any:
+        return func(*args, **kwargs)
+
+    def _dispatch_on_main_thread(self, func, *args: Any, **kwargs: Any) -> Any:
+        if threading.get_ident() == self._main_thread_id:
+            return func(*args, **kwargs)
+
+        if self._main_loop is None:
+            raise RuntimeError(
+                "Main event loop is unavailable for windowed PyBoy execution."
+            )
+
+        future = asyncio.run_coroutine_threadsafe(
+            self._run_on_main_loop(func, *args, **kwargs),
+            self._main_loop,
+        )
+        return future.result()
 
     def _create_pyboy(self) -> PyBoy:
         symbols_path = self.config.symbols_path_obj
@@ -222,6 +247,18 @@ class PokemonRedEnvironment(
         episode_id: str | None = None,
         **kwargs: Any,
     ) -> PokemonRedObservation:
+        if self.config.headless:
+            return self._reset_impl(seed=seed, episode_id=episode_id, **kwargs)
+        return self._dispatch_on_main_thread(
+            self._reset_impl, seed=seed, episode_id=episode_id, **kwargs
+        )
+
+    def _reset_impl(
+        self,
+        seed: int | None = None,
+        episode_id: str | None = None,
+        **kwargs: Any,
+    ) -> PokemonRedObservation:
         try:
             init_state = kwargs.get("init_state")
             resolved = self.state_registry.resolve(init_state, default_alias=self.config.init_state)
@@ -268,6 +305,18 @@ class PokemonRedEnvironment(
             )
 
     def step(
+        self,
+        action: PokemonRedAction,
+        timeout_s: float | None = None,
+        **kwargs: Any,
+    ) -> PokemonRedObservation:
+        if self.config.headless:
+            return self._step_impl(action=action, timeout_s=timeout_s, **kwargs)
+        return self._dispatch_on_main_thread(
+            self._step_impl, action=action, timeout_s=timeout_s, **kwargs
+        )
+
+    def _step_impl(
         self,
         action: PokemonRedAction,
         timeout_s: float | None = None,
@@ -328,6 +377,9 @@ class PokemonRedEnvironment(
 
     def close(self) -> None:
         try:
-            self.pyboy.stop(save=False)
+            if self.config.headless:
+                self.pyboy.stop(save=False)
+            else:
+                self._dispatch_on_main_thread(self.pyboy.stop, save=False)
         except Exception:
             pass

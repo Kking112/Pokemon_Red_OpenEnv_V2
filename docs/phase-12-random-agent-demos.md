@@ -11,7 +11,7 @@ Both demos needed to:
 
 - Use a dummy policy (random legal actions).
 - Run a single environment instance for 100 steps.
-- Display gameplay to the user.
+- Display gameplay to the user in the standard PyBoy window by default.
 - Execute without errors.
 
 ## Implemented changes
@@ -25,15 +25,12 @@ Implemented shared primitives used by both demo scripts:
 - `wait_for_health(base_url, timeout_s, process=None)`:
   - Polls `/health` until the environment server is ready.
   - Detects early process exit when a local server process is passed.
-- `TerminalRenderer`:
-  - Decodes RGB frames and renders them in terminal using ANSI truecolor block characters.
-  - Allows gameplay to be visibly displayed without extra GUI dependencies.
 - `run_random_episode(...)`:
   - Connects with `PokemonRedEnv` client.
   - Calls `reset(init_state=...)`.
   - Samples random actions from `observation.legal_actions`.
   - Steps for up to `steps` actions (default `100`).
-  - Renders every frame and prints step/action/reward metadata.
+  - Prints step/action/reward metadata.
 
 ### 2) Added `demo.py` (local client/server demo)
 
@@ -44,7 +41,7 @@ Created local demo entrypoint that:
 - Sets ROM path via `POKEMON_RED_GB_PATH`.
 - Waits for `/health`.
 - Runs random-action episode for `100` steps by default.
-- Renders gameplay frames in terminal.
+- Uses `POKEMON_RED_HEADLESS=false` unless `--headless` is passed.
 - Cleans up the uvicorn process on exit.
 
 CLI options include:
@@ -53,7 +50,7 @@ CLI options include:
 - `--init-state` (default `game_start`)
 - `--seed`
 - `--fps`
-- `--render-width`
+- `--headless`
 - `--rom-path`
 - `--port`
 - `--use-existing-server` + `--base-url`
@@ -68,10 +65,11 @@ Created Docker demo entrypoint that:
   - `uv run openenv build -t <image>`
 - Starts containerized server with ROM mount:
   - Host ROM -> `/app/roms/PokemonRed.gb` (read-only)
-  - `POKEMON_RED_GB_PATH=/app/roms/PokemonRed.gb`
+- `POKEMON_RED_GB_PATH=/app/roms/PokemonRed.gb`
+- `POKEMON_RED_HEADLESS` set by `--headless` flag (default `false`)
 - Waits for `/health`.
 - Runs random-action episode for `100` steps by default.
-- Renders gameplay frames in terminal.
+- Uses PyBoy `SDL2` window mode when `--headless` is omitted.
 - Stops container on exit (unless `--keep-container` is used).
 
 CLI options include:
@@ -80,7 +78,7 @@ CLI options include:
 - `--init-state` (default `game_start`)
 - `--seed`
 - `--fps`
-- `--render-width`
+- `--headless`
 - `--rom-path`
 - `--image`
 - `--force-build`
@@ -93,10 +91,10 @@ CLI options include:
 
 Added a "Random action demos" section with direct commands:
 
-- `uv run demo.py`
+ - `uv run demo.py`
 - `uv run demo_docker.py`
 
-and clarified both run a random dummy agent for 100 steps with rendered frames.
+and clarified both run a random dummy agent for 100 steps with standard window rendering by default.
 
 ## Validation / test-debug-retest cycle
 
@@ -112,22 +110,22 @@ and clarified both run a random dummy agent for 100 steps with rendered frames.
 ### Demo smoke tests
 
 1. Local demo short run:
-   - `uv run demo.py --steps 5 --fps 0 --render-width 32`
-   - Result: passed; 5 random steps executed and rendered.
+   - `uv run demo.py --steps 5 --fps 0 --headless`
+   - Result: passed; 5 random steps executed in headless mode.
 2. Docker demo short run:
-   - `uv run demo_docker.py --steps 5 --fps 0 --render-width 32`
-   - Result: passed; image build succeeded, container started, 5 steps executed and rendered.
+   - `uv run demo_docker.py --steps 5 --fps 0 --headless`
+   - Result: passed; image build succeeded, container started, 5 steps executed in headless mode.
 
 ### Final requested-behavior verification (100 steps)
 
 1. Local demo full default-step run:
-   - `uv run demo.py --fps 0`
-   - Result: passed; completed 100 random steps, rendered each frame, no errors.
+   - `uv run demo.py --fps 0 --headless`
+   - Result: passed; completed 100 random steps in headless mode.
 2. Docker demo full default-step run:
-   - `uv run demo_docker.py --fps 0 --skip-build`
-   - Result: passed; completed 100 random steps, rendered each frame, no errors.
+   - `uv run demo_docker.py --fps 0 --headless --skip-build`
+   - Result: passed; completed 100 random steps in headless mode, no errors.
 
 ## Notes
 
 - Both demos intentionally use a dummy random policy and only sample from legal action indices returned by the environment.
-- Rendering is terminal-based (ANSI truecolor), so no extra GUI packages are required for visible output.
+- Default rendering behavior is windowed PyBoy mode (`headless=False`). Headless mode stays supported via `--headless`.

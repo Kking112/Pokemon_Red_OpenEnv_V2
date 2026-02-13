@@ -3,4 +3,4 @@ version = 1
 name = "Pokemon_Red_OpenEnv_V2"
 
 [setup]
-script = "export GITHUB_PAT_TOKEN=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"
+script = ""

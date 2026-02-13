@@ -45,10 +45,9 @@ def parse_args() -> argparse.Namespace:
         help="Render speed. Set 0 to render as fast as possible.",
     )
     parser.add_argument(
-        "--render-width",
-        type=int,
-        default=64,
-        help="Target render width in terminal character cells.",
+        "--headless",
+        action="store_true",
+        help="Run with PyBoy in headless mode (no game window). Omit for normal PyBoy rendering.",
     )
     parser.add_argument(
         "--rom-path",
@@ -80,10 +79,10 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _start_local_server(port: int, rom_path: Path) -> subprocess.Popen:
+def _start_local_server(port: int, rom_path: Path, headless: bool) -> subprocess.Popen:
     env = os.environ.copy()
     env["POKEMON_RED_GB_PATH"] = str(rom_path)
-    env.setdefault("POKEMON_RED_HEADLESS", "true")
+    env["POKEMON_RED_HEADLESS"] = "true" if headless else "false"
 
     cmd = [
         "uv",
@@ -132,7 +131,6 @@ def main() -> None:
                 init_state=args.init_state,
                 seed=args.seed,
                 fps=args.fps,
-                render_width=args.render_width,
                 label="pokemon_red (local existing server)",
             )
         )
@@ -147,7 +145,7 @@ def main() -> None:
 
     port = args.port if args.port > 0 else find_free_port()
     base_url = f"http://127.0.0.1:{port}"
-    server = _start_local_server(port=port, rom_path=rom_path)
+    server = _start_local_server(port=port, rom_path=rom_path, headless=args.headless)
     try:
         wait_for_health(base_url, args.server_timeout_s, process=server)
         steps_executed, finished = asyncio.run(
@@ -157,7 +155,6 @@ def main() -> None:
                 init_state=args.init_state,
                 seed=args.seed,
                 fps=args.fps,
-                render_width=args.render_width,
                 label="pokemon_red (local spawned server)",
             )
         )
