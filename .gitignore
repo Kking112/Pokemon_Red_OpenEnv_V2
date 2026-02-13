@@ -5,3 +5,5 @@ __pycache__/
 PokemonRed.gb
 .codex/*
 .env
+pokemon_red_openenv_v2.egg-info/*
+.env
