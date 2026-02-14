@@ -35,4 +35,4 @@ uv run openenv validate --verbose .
 
 - Environment config is immutable per server process.
 - Change reward/profile settings by launching separate server instances.
-- Existing states are reused from `pokemonred_puffer/pyboy_states`; no state capture in this phase.
+- Existing states are reused from `pokemon_red_env/states`; users can add new `.state` files there.

@@ -9,9 +9,10 @@ from .base import BaseRewardComponent
 from .battle import BattleWinReward
 from .events import EventReward
 from .exploration import ExplorationReward
+from .exploration import ExplorationMovementReward
 from .healing import HealingReward
 from .levels import LevelUpReward
-from .movement import MovementReward
+from .menu import MenuInteractionReward, MenuNoveltyReward
 
 
 class RewardManager:
@@ -27,10 +28,27 @@ class RewardManager:
 
     def register_defaults(self, config: PokemonRedConfig) -> None:
         self.register(ExplorationReward(weight=config.exploration_weight))
+        self.register(
+            ExplorationMovementReward(
+                weight=config.movement_bonus_weight,
+                anneal_steps=config.movement_bonus_anneal_steps,
+            )
+        )
         self.register(BadgeReward(weight=config.badge_weight))
         self.register(LevelUpReward(weight=config.level_weight))
         self.register(EventReward(weight=config.event_weight))
-        self.register(MovementReward(weight=config.movement_weight))
+        self.register(
+            MenuNoveltyReward(
+                weight=config.menu_novelty_weight,
+                max_unique_signatures=config.max_menu_signatures_per_episode,
+            )
+        )
+        self.register(
+            MenuInteractionReward(
+                weight=config.menu_interaction_weight,
+                anneal_steps=config.menu_anneal_steps,
+            )
+        )
         self.register(BattleWinReward(weight=config.battle_win_weight))
         self.register(HealingReward(weight=config.healing_weight))
         self.reward_scale = config.reward_scale

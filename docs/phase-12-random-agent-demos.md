@@ -47,7 +47,7 @@ Created local demo entrypoint that:
 CLI options include:
 
 - `--steps` (default `100`)
-- `--init-state` (default `game_start`)
+- `--init-state` (default `has_pokedex`)
 - `--seed`
 - `--fps`
 - `--headless`
@@ -75,7 +75,7 @@ Created Docker demo entrypoint that:
 CLI options include:
 
 - `--steps` (default `100`)
-- `--init-state` (default `game_start`)
+- `--init-state` (default `has_pokedex`)
 - `--seed`
 - `--fps`
 - `--headless`

@@ -9,7 +9,7 @@ from pydantic import Field
 class PokemonRedAction(Action):
     """Discrete action sent by the policy."""
 
-    action: int = Field(ge=0, le=16, description="Discrete action index")
+    action: int = Field(ge=0, le=8, description="Discrete action index")
 
 
 class PokemonRedObservation(Observation):

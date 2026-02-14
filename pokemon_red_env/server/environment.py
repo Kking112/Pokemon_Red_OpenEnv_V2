@@ -26,7 +26,7 @@ class PokemonRedEnvironment(
 ):
     """OpenEnv-compatible Pokemon Red environment backed by PyBoy."""
 
-    SUPPORTS_CONCURRENT_SESSIONS = False
+    SUPPORTS_CONCURRENT_SESSIONS = True
 
     def __init__(self, config: PokemonRedConfig):
         super().__init__()

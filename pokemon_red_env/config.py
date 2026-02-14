@@ -9,7 +9,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _DEFAULT_ROM = _REPO_ROOT / "PokemonRed.gb"
-_DEFAULT_STATE_DIR = _REPO_ROOT / "pokemonred_puffer" / "pyboy_states"
+_DEFAULT_STATE_DIR = _REPO_ROOT / "pokemon_red_env" / "states"
 _DEFAULT_SYMBOLS = _REPO_ROOT / "Assembly_RAM_Addresses" / "pokered.sym"
 _DEFAULT_EVENTS = _REPO_ROOT / "pokemon_red_env" / "data" / "events.json"
 _DEFAULT_MAPS = _REPO_ROOT / "pokemon_red_env" / "data" / "maps.json"
@@ -29,7 +29,7 @@ class PokemonRedConfig(BaseSettings):
     gb_path: str = str(_DEFAULT_ROM)
     symbols_path: str = str(_DEFAULT_SYMBOLS)
     state_dir: str = str(_DEFAULT_STATE_DIR)
-    init_state: str = "game_start"
+    init_state: str = "has_pokedex"
 
     # Timing
     action_freq: int = 24
@@ -46,12 +46,23 @@ class PokemonRedConfig(BaseSettings):
     use_modular_rewards: bool = True
     reward_scale: float = 1.0
     exploration_weight: float = 0.02
+    movement_bonus_weight: float = 0.003
+    movement_bonus_anneal_steps: int = 120
     badge_weight: float = 5.0
     level_weight: float = 1.0
     event_weight: float = 0.1
-    movement_weight: float = 1.0
     battle_win_weight: float = 2.0
     healing_weight: float = 1.0
+    menu_novelty_weight: float = 0.004
+    menu_interaction_weight: float = 0.001
+    menu_anneal_steps: int = 120
+    max_menu_signatures_per_episode: int = 128
+
+    # Legacy fields kept for backward compatibility
+    movement_weight: float = 1.0
+
+    # Concurrency
+    max_concurrent_envs: int = 1
 
     # Termination
     terminate_on_blackout: bool = True
@@ -73,10 +84,32 @@ class PokemonRedConfig(BaseSettings):
             raise ValueError("action_freq must be >= press_duration + 1")
         if self.max_steps < 0:
             raise ValueError("max_steps must be 0 (unlimited) or positive")
+        if self.max_concurrent_envs < 1:
+            raise ValueError("max_concurrent_envs must be >= 1")
         if self.screen_downscale < 1:
             raise ValueError("screen_downscale must be >= 1")
         if self.event_flags_max_count < 0:
             raise ValueError("event_flags_max_count must be >= 0")
+        if self.movement_bonus_anneal_steps < 0:
+            raise ValueError("movement_bonus_anneal_steps must be >= 0")
+        if self.menu_anneal_steps < 0:
+            raise ValueError("menu_anneal_steps must be >= 0")
+        if self.max_menu_signatures_per_episode < 0:
+            raise ValueError("max_menu_signatures_per_episode must be >= 0")
+        if self.movement_bonus_weight < 0:
+            raise ValueError("movement_bonus_weight must be >= 0")
+        if self.menu_novelty_weight < 0:
+            raise ValueError("menu_novelty_weight must be >= 0")
+        if self.menu_interaction_weight < 0:
+            raise ValueError("menu_interaction_weight must be >= 0")
+        if self.badge_weight < 0:
+            raise ValueError("badge_weight must be >= 0")
+        if self.level_weight < 0:
+            raise ValueError("level_weight must be >= 0")
+        if self.event_weight < 0:
+            raise ValueError("event_weight must be >= 0")
+        if self.exploration_weight < 0:
+            raise ValueError("exploration_weight must be >= 0")
         return self
 
     @property

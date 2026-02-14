@@ -29,7 +29,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--init-state",
-        default="game_start",
+        default="has_pokedex",
         help="Initial state alias or state file name.",
     )
     parser.add_argument(

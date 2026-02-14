@@ -32,7 +32,7 @@ class StateRegistry:
             return []
         return sorted([p.name for p in self.state_dir.glob("*.state")])
 
-    def resolve(self, requested: str | None, default_alias: str = "game_start") -> ResolvedState:
+    def resolve(self, requested: str | None, default_alias: str = "has_pokedex") -> ResolvedState:
         request = (requested or default_alias).strip()
         if not request:
             request = default_alias

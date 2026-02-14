@@ -1,3 +1,5 @@
+from pokemon_red_env.models import PokemonRedAction
+import pytest
 from pokemon_red_env.action_space import build_action_bindings
 
 
@@ -13,3 +15,10 @@ def test_action_bindings_with_select_put_noop_last():
     assert len(bindings) == 9
     assert bindings[-2].name == "select"
     assert bindings[-1].name == "noop"
+
+
+def test_action_schema_supports_max_expected_index():
+    valid = PokemonRedAction(action=8)
+    assert valid.action == 8
+    with pytest.raises(ValueError):
+        PokemonRedAction(action=9)

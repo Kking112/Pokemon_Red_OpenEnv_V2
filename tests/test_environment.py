@@ -68,6 +68,6 @@ def test_invalid_action_returns_terminal_error(
     env = PokemonRedEnvironment(cfg)
     env.reset()
 
-    obs = env.step(PokemonRedAction(action=15))
+    obs = env.step(PokemonRedAction(action=8))
     assert obs.done is True
     assert "invalid_action_index" in obs.info["error"]

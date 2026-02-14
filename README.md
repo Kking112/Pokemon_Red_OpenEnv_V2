@@ -8,7 +8,7 @@ A production-oriented OpenEnv environment for Pokemon Red using PyBoy.
 - PyBoy-backed execution with RAM-derived `game_state` per step.
 - Modular reward system with configurable components.
 - Action space with optional `SELECT` and `NOOP` always appended as the final action.
-- Canonical state aliases backed by existing `pokemonred_puffer/pyboy_states` files.
+- Canonical state aliases backed by `.state` files in `pokemon_red_env/states/`.
 
 ## Installation
 
@@ -53,6 +53,19 @@ uv run openenv validate --verbose .
 uv run uvicorn pokemon_red_env.server.app:app --host 0.0.0.0 --port 8000
 ```
 
+## Parallel sessions
+
+Set a higher concurrency limit for headless runs:
+
+```bash
+POKEMON_RED_MAX_CONCURRENT_ENVS=8 uv run uvicorn pokemon_red_env.server.app:app --host 0.0.0.0 --port 8000
+```
+
+OpenEnv creates one environment instance per WebSocket session.
+
+- Works with `POKEMON_RED_HEADLESS=true`.
+- In windowed mode (`POKEMON_RED_HEADLESS=false`), concurrency is forced to `1` and a warning is logged.
+
 ## Docker usage
 
 Build image:
@@ -78,7 +91,7 @@ from pokemon_red_env import PokemonRedAction, PokemonRedEnv
 
 async def main():
     async with PokemonRedEnv(base_url="http://localhost:8000") as env:
-        result = await env.reset(init_state="game_start")
+        result = await env.reset(init_state="has_pokedex")
         while not result.done:
             # Example: NOOP is final index in legal_actions
             noop_action = result.observation.legal_actions[-1]
@@ -129,7 +142,20 @@ With `include_select=true`:
 - `7 select`
 - `8 noop`
 
+## Reward knobs
+
+- Parallel env sessions: `POKEMON_RED_MAX_CONCURRENT_ENVS`
+- Exploration novelty: `POKEMON_RED_EXPLORATION_WEIGHT`
+- Early movement bonus: `POKEMON_RED_MOVEMENT_BONUS_WEIGHT`
+- Early movement anneal steps: `POKEMON_RED_MOVEMENT_BONUS_ANNEAL_STEPS`
+- Menu novelty: `POKEMON_RED_MENU_NOVELTY_WEIGHT`
+- Menu interaction: `POKEMON_RED_MENU_INTERACTION_WEIGHT`
+- Menu anneal steps: `POKEMON_RED_MENU_ANNEAL_STEPS`
+- Menu novelty cap: `POKEMON_RED_MAX_MENU_SIGNATURES_PER_EPISODE`
+
 ## State aliases
+
+- Default: `has_pokedex`
 
 - `game_start` -> `home.state`
 - `has_starter` -> `Bulbasaur.state`
@@ -137,7 +163,7 @@ With `include_select=true`:
 
 These resolve against:
 
-`/Users/neo/Desktop/My_Projects/Open_Source/OpenEnv/OpenEnv_Challenege/Pokemon_Red_OpenEnv_V2/pokemonred_puffer/pyboy_states`
+`pokemon_red_env/states/*.state`
 
 ## Notes
 

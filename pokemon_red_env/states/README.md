@@ -1,13 +1,18 @@
 # State Usage
 
-This environment currently reuses PyBoy states from:
+This environment uses PyBoy states from this package directory:
 
-`/Users/neo/Desktop/My_Projects/Open_Source/OpenEnv/OpenEnv_Challenege/Pokemon_Red_OpenEnv/pokemonred_puffer/pyboy_states`
+`pokemon_red_env/states/`
+
+All `.state` files in this folder are valid start states. Use either:
+- a full filename like `home.state`,
+- a basename like `home`,
+- or one of the aliases below.
 
 Canonical aliases:
 
-- `game_start` -> `home.state`
 - `has_starter` -> `Bulbasaur.state`
 - `has_pokedex` -> `has_pokedex.state`
+- `game_start` -> `home.state`
 
 You can also pass a direct `.state` filename or absolute file path to `reset(init_state=...)`.
