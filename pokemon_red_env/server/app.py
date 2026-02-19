@@ -51,6 +51,3 @@ def create_pokemon_app(
 def create_pokemon_environment() -> PokemonRedEnvironment:
     config = PokemonRedConfig()
     return PokemonRedEnvironment(config=config)
-
-
-app = create_pokemon_app()

@@ -4,7 +4,9 @@ import os
 
 import uvicorn
 
-from pokemon_red_env.server.app import app
+from pokemon_red_env.server.app import create_pokemon_app
+
+app = create_pokemon_app()
 
 
 def main() -> None:

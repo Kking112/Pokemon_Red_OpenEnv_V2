@@ -50,7 +50,7 @@ uv run openenv validate --verbose .
 ## Run server
 
 ```bash
-uv run uvicorn pokemon_red_env.server.app:app --host 0.0.0.0 --port 8000
+uv run uvicorn server.app:app --host 0.0.0.0 --port 8000
 ```
 
 ## Parallel sessions
@@ -58,7 +58,7 @@ uv run uvicorn pokemon_red_env.server.app:app --host 0.0.0.0 --port 8000
 Set a higher concurrency limit for headless runs:
 
 ```bash
-POKEMON_RED_MAX_CONCURRENT_ENVS=8 uv run uvicorn pokemon_red_env.server.app:app --host 0.0.0.0 --port 8000
+POKEMON_RED_MAX_CONCURRENT_ENVS=8 uv run uvicorn server.app:app --host 0.0.0.0 --port 8000
 ```
 
 OpenEnv creates one environment instance per WebSocket session.
