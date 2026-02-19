@@ -75,6 +75,8 @@ class PokemonRedEnvironment(
         )
         self._seen_coords: set[tuple[int, int, int]] = set()
         self._prev_state_dict: dict[str, Any] = {}
+        self._prev_reward: float = 0.0
+        self._prev_action_name: str = ""
         self._blank_screen = self._encode_png_b64(np.zeros((144, 160, 3), dtype=np.uint8))
 
     async def _run_on_main_loop(self, func, *args: Any, **kwargs: Any) -> Any:
@@ -155,6 +157,11 @@ class PokemonRedEnvironment(
             Image.fromarray(frame).save(buffer, format="PNG")
             return base64.b64encode(buffer.getvalue()).decode("ascii")
 
+    _DELTA_KEYS: list[str] = [
+        "player_x", "player_y", "seen_coords_count", "badge_count",
+        "level_sum", "event_count", "player_money",
+    ]
+
     def _update_seen_coords(self, game_state_dict: dict[str, Any]) -> None:
         coord = (
             int(game_state_dict.get("player_x", 0)),
@@ -162,6 +169,21 @@ class PokemonRedEnvironment(
             int(game_state_dict.get("map_id", 0)),
         )
         self._seen_coords.add(coord)
+
+    def _compute_state_deltas(
+        self, curr: dict[str, Any], prev: dict[str, Any]
+    ) -> dict[str, int | float | bool]:
+        deltas: dict[str, int | float | bool] = {}
+        for key in self._DELTA_KEYS:
+            c = curr.get(key, 0)
+            p = prev.get(key, 0)
+            if isinstance(c, (int, float)) and isinstance(p, (int, float)):
+                deltas[f"delta_{key}"] = c - p
+        deltas["map_changed"] = curr.get("map_id") != prev.get("map_id")
+        deltas["battle_started"] = (
+            curr.get("in_battle", 0) > 0 and prev.get("in_battle", 0) == 0
+        )
+        return deltas
 
     def _extract_game_state(self) -> dict[str, Any]:
         state = self.memory.extract_game_state(
@@ -284,7 +306,15 @@ class PokemonRedEnvironment(
             self._update_seen_coords(game_state)
             game_state["seen_coords_count"] = len(self._seen_coords)
 
+            # Temporal awareness: empty deltas and zeroed reward feedback on reset
+            game_state["state_deltas"] = {}
+            game_state["prev_step_reward"] = 0.0
+            game_state["prev_action_name"] = ""
+
             self._prev_state_dict = dict(game_state)
+            self._prev_reward = 0.0
+            self._prev_action_name = ""
+
             screen_b64, shape = self._capture_screen()
 
             return self._build_observation(
@@ -341,6 +371,18 @@ class PokemonRedEnvironment(
             self._update_seen_coords(game_state)
             game_state["seen_coords_count"] = len(self._seen_coords)
 
+            # Temporal awareness: state deltas from previous step
+            if self.config.include_state_deltas and self._prev_state_dict:
+                game_state["state_deltas"] = self._compute_state_deltas(
+                    game_state, self._prev_state_dict
+                )
+            else:
+                game_state["state_deltas"] = {}
+
+            # Temporal awareness: reward feedback from previous action
+            game_state["prev_step_reward"] = self._prev_reward
+            game_state["prev_action_name"] = self._prev_action_name
+
             reward, breakdown = self._calculate_reward(game_state)
             self._state.total_reward += float(reward)
             game_state["total_reward"] = float(self._state.total_reward)
@@ -365,6 +407,8 @@ class PokemonRedEnvironment(
             )
 
             self._prev_state_dict = dict(game_state)
+            self._prev_reward = float(reward)
+            self._prev_action_name = action_name
             return obs
         except Exception as exc:  # noqa: BLE001
             return self._error_observation(

@@ -39,6 +39,7 @@ class PokemonRedConfig(BaseSettings):
     # Observation
     screen_downscale: int = 1
     include_game_state: bool = True
+    include_state_deltas: bool = True
     event_flags_mode: Literal["curated", "all", "none"] = "curated"
     event_flags_max_count: int = 1024
 
