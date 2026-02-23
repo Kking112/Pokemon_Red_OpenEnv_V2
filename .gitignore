@@ -6,3 +6,4 @@ PokemonRed.gb
 .env
 pokemon_red_openenv_v2.egg-info/*
 .codex/
+.omc
