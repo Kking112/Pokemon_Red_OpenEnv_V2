@@ -169,3 +169,5 @@ These resolve against:
 
 - OpenEnv dependency is pinned to latest upstream GitHub `main` via `openenv-core` source config.
 - `pokered.sym` is treated as the source of truth for RAM addresses.
+- Much of the design of this environment is based off of the following two repositories: 1. https://github.com/drubinstein/pokemonred_puffer 2. https://github.com/PWhiddy/PokemonRedExperiments
+- Additionally, significant credit given to the pred team: https://github.com/pret/pokered
