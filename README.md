@@ -165,6 +165,22 @@ These resolve against:
 
 `pokemon_red_env/states/*.state`
 
+## Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+| Document | Description |
+|----------|-------------|
+| [Architecture](docs/architecture.md) | System architecture, component diagram, data flow, and design decisions |
+| [Configuration](docs/configuration.md) | Complete reference for all `POKEMON_RED_*` environment variables |
+| [Reward System](docs/reward-system.md) | Modular reward components, annealing mechanics, and extension guide |
+| [Memory & Game State](docs/memory-and-game-state.md) | RAM address system, memory reader, state extraction, and temporal awareness |
+| [Environment API](docs/environment-api.md) | Environment interface, action space, observations, and state aliases |
+| [Server & Client](docs/server-and-client.md) | WebSocket server, client usage, concurrency, and OpenEnv validation |
+| [Deployment](docs/deployment.md) | Setup, Docker, demo scripts, testing, and troubleshooting |
+
+Development history is preserved in `docs/development_phases/`.
+
 ## Notes
 
 - OpenEnv dependency is pinned to latest upstream GitHub `main` via `openenv-core` source config.
