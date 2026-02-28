@@ -352,9 +352,20 @@ class PokemonRedEnvironment(
         timeout_s: float | None = None,
         **kwargs: Any,
     ) -> PokemonRedObservation:
-        del timeout_s, kwargs
+        del kwargs
         if self._state.done:
             return self._error_observation("episode_already_done")
+
+        # Set up watchdog thread if timeout_s is specified
+        _timed_out = False
+        _watchdog = None
+        if timeout_s is not None and timeout_s > 0:
+            def _on_timeout():
+                nonlocal _timed_out
+                _timed_out = True
+            _watchdog = threading.Timer(timeout_s, _on_timeout)
+            _watchdog.daemon = True
+            _watchdog.start()
 
         try:
             action_idx = int(action.action)
@@ -364,10 +375,22 @@ class PokemonRedEnvironment(
                 )
 
             action_name = self._run_action(action_idx)
+
+            if _timed_out:
+                return self._error_observation(
+                    f"step_timeout: step exceeded {timeout_s}s during action execution"
+                )
+
             self._state.step_count += 1
             self._state.last_action = action_idx
 
             game_state = self._extract_game_state()
+
+            if _timed_out:
+                return self._error_observation(
+                    f"step_timeout: step exceeded {timeout_s}s during state extraction"
+                )
+
             self._update_seen_coords(game_state)
             game_state["seen_coords_count"] = len(self._seen_coords)
 
@@ -414,6 +437,9 @@ class PokemonRedEnvironment(
             return self._error_observation(
                 f"step_failed: {exc.__class__.__name__}: {exc}\n{traceback.format_exc()}"
             )
+        finally:
+            if _watchdog is not None:
+                _watchdog.cancel()
 
     @property
     def state(self) -> PokemonRedState:
@@ -427,3 +453,19 @@ class PokemonRedEnvironment(
                 self._dispatch_on_main_thread(self.pyboy.stop, save=False)
         except Exception:
             pass
+
+    def pump_events(self) -> None:
+        """Process pending SDL2 window events without advancing emulation.
+
+        Call this periodically when the environment is idle to prevent
+        the OS from marking the window as unresponsive.
+        """
+        if not self.config.headless:
+            # tick(0) processes SDL2 events via the plugin manager
+            # without advancing any emulator frames
+            self.pyboy.tick(0, render=False)
+
+    @property
+    def is_headless(self) -> bool:
+        """Whether the environment is running in headless mode (no SDL2 window)."""
+        return self.config.headless

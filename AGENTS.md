@@ -31,6 +31,14 @@ uv run pytest --cov=pokemon_red_env --cov-report=term-missing
 uv run openenv validate --verbose .
 ```
 
+## SDL2 Window Responsiveness
+
+When running in non-headless mode (`headless=False`), the environment provides:
+
+- **`pump_events()`**: Call periodically during idle time to process SDL2 window events without advancing emulation. Uses `pyboy.tick(0, render=False)`. Prevents the OS from marking the window as unresponsive during long pauses (e.g., VLM forward passes, PPO updates).
+- **`is_headless`** property: Check whether the environment has an SDL2 window.
+- **`timeout_s`** on `step()`: Optional watchdog thread that flags long-running steps. Checks at natural boundaries (after action execution, after state extraction).
+
 ## Operational constraints
 
 - Environment config is immutable per server process.

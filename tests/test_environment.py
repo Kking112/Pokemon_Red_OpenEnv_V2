@@ -71,3 +71,88 @@ def test_invalid_action_returns_terminal_error(
     obs = env.step(PokemonRedAction(action=8))
     assert obs.done is True
     assert "invalid_action_index" in obs.info["error"]
+
+
+# -----------------------------------------------------------------------
+# Tests for pump_events() and is_headless property
+# -----------------------------------------------------------------------
+
+
+def test_pump_events_headless_is_noop(
+    monkeypatch, tmp_path, temp_state_dir, fake_pyboy_cls
+):
+    """pump_events() should not tick in headless mode."""
+    monkeypatch.setattr("pokemon_red_env.server.environment.PyBoy", fake_pyboy_cls)
+    cfg = _make_config(tmp_path, temp_state_dir)
+    assert cfg.headless is True  # default is headless
+    env = PokemonRedEnvironment(cfg)
+    env.reset()
+
+    ticks_before = len(env.pyboy.ticks)
+    env.pump_events()
+    ticks_after = len(env.pyboy.ticks)
+    # No tick should have been called
+    assert ticks_after == ticks_before
+
+
+def test_pump_events_windowed_calls_tick_zero(
+    monkeypatch, tmp_path, temp_state_dir, fake_pyboy_cls
+):
+    """pump_events() should call tick(0, render=False) in windowed mode."""
+    monkeypatch.setattr("pokemon_red_env.server.environment.PyBoy", fake_pyboy_cls)
+    cfg = _make_config(tmp_path, temp_state_dir)
+    # Force non-headless
+    object.__setattr__(cfg, "headless", False)
+    env = PokemonRedEnvironment(cfg)
+    env.reset()
+
+    ticks_before = len(env.pyboy.ticks)
+    env.pump_events()
+    ticks_after = len(env.pyboy.ticks)
+    assert ticks_after == ticks_before + 1
+    # The tick should be (0, False)
+    assert env.pyboy.ticks[-1] == (0, False)
+
+
+def test_pump_events_does_not_advance_game_state(
+    monkeypatch, tmp_path, temp_state_dir, fake_pyboy_cls
+):
+    """pump_events() should not change step_count or other state."""
+    monkeypatch.setattr("pokemon_red_env.server.environment.PyBoy", fake_pyboy_cls)
+    cfg = _make_config(tmp_path, temp_state_dir)
+    env = PokemonRedEnvironment(cfg)
+    env.reset()
+
+    step_count_before = env.state.step_count
+    env.pump_events()
+    assert env.state.step_count == step_count_before
+
+
+def test_is_headless_property(
+    monkeypatch, tmp_path, temp_state_dir, fake_pyboy_cls
+):
+    """is_headless should reflect the config."""
+    monkeypatch.setattr("pokemon_red_env.server.environment.PyBoy", fake_pyboy_cls)
+    cfg = _make_config(tmp_path, temp_state_dir)
+    env = PokemonRedEnvironment(cfg)
+    assert env.is_headless is True
+
+    # Non-headless
+    object.__setattr__(cfg, "headless", False)
+    env2 = PokemonRedEnvironment(cfg)
+    assert env2.is_headless is False
+
+
+def test_step_timeout_flag(
+    monkeypatch, tmp_path, temp_state_dir, fake_pyboy_cls
+):
+    """When timeout_s is provided, the watchdog should be set up (but not fire for fast steps)."""
+    monkeypatch.setattr("pokemon_red_env.server.environment.PyBoy", fake_pyboy_cls)
+    cfg = _make_config(tmp_path, temp_state_dir)
+    env = PokemonRedEnvironment(cfg)
+    env.reset()
+
+    # Step with a generous timeout — should complete normally
+    obs = env.step(PokemonRedAction(action=0), timeout_s=10.0)
+    assert obs.done is False
+    assert "error" not in obs.info or obs.info.get("error") is None
