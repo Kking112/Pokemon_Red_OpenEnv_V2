@@ -95,10 +95,10 @@ def test_pump_events_headless_is_noop(
     assert ticks_after == ticks_before
 
 
-def test_pump_events_windowed_calls_tick_zero(
+def test_pump_events_windowed_calls_sdl2_get_events(
     monkeypatch, tmp_path, temp_state_dir, fake_pyboy_cls
 ):
-    """pump_events() should call tick(0, render=False) in windowed mode."""
+    """pump_events() should call sdl2.ext.get_events() in windowed mode."""
     monkeypatch.setattr("pokemon_red_env.server.environment.PyBoy", fake_pyboy_cls)
     cfg = _make_config(tmp_path, temp_state_dir)
     # Force non-headless
@@ -106,12 +106,23 @@ def test_pump_events_windowed_calls_tick_zero(
     env = PokemonRedEnvironment(cfg)
     env.reset()
 
+    # Mock sdl2.ext.get_events to verify it's called
+    call_count = 0
+
+    def fake_get_events():
+        nonlocal call_count
+        call_count += 1
+        return []
+
+    monkeypatch.setattr("sdl2.ext.get_events", fake_get_events)
+    env.pump_events()
+    assert call_count == 1
+
+    # Verify pyboy.tick was NOT called (no emulator advancement)
     ticks_before = len(env.pyboy.ticks)
     env.pump_events()
-    ticks_after = len(env.pyboy.ticks)
-    assert ticks_after == ticks_before + 1
-    # The tick should be (0, False)
-    assert env.pyboy.ticks[-1] == (0, False)
+    assert len(env.pyboy.ticks) == ticks_before
+    assert call_count == 2
 
 
 def test_pump_events_does_not_advance_game_state(

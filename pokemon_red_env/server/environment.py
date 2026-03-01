@@ -459,11 +459,18 @@ class PokemonRedEnvironment(
 
         Call this periodically when the environment is idle to prevent
         the OS from marking the window as unresponsive.
+
+        Note: ``pyboy.tick(0)`` does NOT pump SDL2 events — the internal
+        ``while count != 0`` loop never executes, so ``_handle_events()``
+        is never called.  We call ``sdl2.ext.get_events()`` directly,
+        which is the same function PyBoy's own ``sdl2_event_pump()`` uses.
         """
         if not self.config.headless:
-            # tick(0) processes SDL2 events via the plugin manager
-            # without advancing any emulator frames
-            self.pyboy.tick(0, render=False)
+            try:
+                from sdl2.ext import get_events
+                get_events()
+            except ImportError:
+                pass
 
     @property
     def is_headless(self) -> bool:
